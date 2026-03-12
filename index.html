@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>robertted.dev</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0d0d0d;
+  color: #e8e8e8;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  line-height: 1.8;
+  min-height: 100vh;
+  padding: 3rem 2rem 6rem;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* online indicator */
+#indicator {
+  position: fixed;
+  top: 1.4rem;
+  right: 2rem;
+  font-size: 11px;
+  color: #444;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  letter-spacing: 0.1em;
+}
+#indicator .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #4af626;
+  animation: pulse 2.5s infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; }
+  50%      { opacity: 0.3; }
+}
+
+.line { display: block; white-space: pre-wrap; word-break: break-word; }
+
+.green { color: #4af626; }
+.dim   { color: #555; }
+
+a { color: #e8e8e8; text-underline-offset: 3px; }
+a:hover { color: #4af626; }
+
+/* blinking caret */
+.caret {
+  display: inline-block;
+  width: 8px; height: 1em;
+  background: #e8e8e8;
+  vertical-align: middle;
+  margin-left: 1px;
+  animation: blink 1s step-end infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* interactive input row */
+#input-row {
+  display: none;
+  align-items: center;
+  gap: 0;
+  margin-top: 0;
+}
+#input-row.visible { display: flex; }
+#input-prompt { color: #4af626; }
+#cmd-input {
+  background: none;
+  border: none;
+  outline: none;
+  color: #e8e8e8;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  line-height: 1.8;
+  flex: 1;
+  caret-color: #4af626;
+  padding-left: 0.5rem;
+}
+</style>
+</head>
+<body>
+
+<div id="indicator"><span class="dot"></span>online</div>
+<div id="out"></div>
+<div id="input-row">
+  <span id="input-prompt">~</span>
+  <input id="cmd-input" autocomplete="off" spellcheck="false" autofocus/>
+</div>
+
+<script>
+const out = document.getElementById('out');
+const inputRow = document.getElementById('input-row');
+const cmdInput = document.getElementById('cmd-input');
+
+// ── AUTO SEQUENCE ─────────────────────────────
+const sequence = [
+  [`<span class="dim">  robertted.dev</span>`, 0],
+  [`<span class="dim">  ────────────────────────────────────</span>`, 80],
+  [``, 280],
+
+  [`<span class="green">~</span> whoami`, 500, true],
+  [`Your Name`, 80],
+  [`Full-Stack Developer`, 60],
+  [`Based in Your City`, 60],
+  [``, 280],
+
+  [`<span class="green">~</span> cat about.txt`, 500, true],
+  [`I build things for the web.`, 60],
+  [`Clean code, thoughtful architecture, products`, 60],
+  [`that people actually enjoy using.`, 60],
+  [``, 280],
+
+  [`<span class="green">~</span> ls skills/`, 500, true],
+  [`<span class="dim">frontend </span>  React  Next.js  TypeScript  Tailwind`, 60],
+  [`<span class="dim">backend  </span>  Node.js  Python  FastAPI`, 60],
+  [`<span class="dim">database </span>  PostgreSQL  MongoDB  Redis`, 60],
+  [`<span class="dim">devops   </span>  AWS  Docker  CI/CD  Linux`, 60],
+  [``, 280],
+
+  [`<span class="green">~</span> ls projects/`, 500, true],
+  [`<span class="dim">01</span>  Project Alpha   — SaaS platform, 10k+ users`, 60],
+  [`<span class="dim">02</span>  Project Beta    — AI analytics dashboard`, 60],
+  [`<span class="dim">03</span>  Project Gamma   — Mobile app + REST API`, 60],
+  [`<span class="dim">04</span>  Project Delta   — Open source CLI ★500`, 60],
+  [``, 280],
+
+  [`<span class="green">~</span> cat contact.txt`, 500, true],
+  [`email     <a href="mailto:hello@yourname.dev">hello@yourname.dev</a>`, 60],
+  [`github    <a href="https://github.com/robertted" target="_blank">github.com/robertted</a>`, 60],
+  [`linkedin  <a href="https://linkedin.com/in/yourname" target="_blank">linkedin.com/in/yourname</a>`, 60],
+  [`twitter   <a href="https://twitter.com/yourhandle" target="_blank">@yourhandle</a>`, 60],
+  [``, 280],
+
+  [`<span class="green">~</span> echo $STATUS`, 500, true],
+  [`<span class="green">open to work — reach out anytime.</span>`, 80],
+  [``, 400],
+];
+
+function newLine(html = '') {
+  const el = document.createElement('span');
+  el.className = 'line';
+  el.innerHTML = html;
+  out.appendChild(el);
+  return el;
+}
+
+function runSequence(i) {
+  if (i >= sequence.length) {
+    // hint line then activate input
+    newLine(`<span class="dim">  type 'help' for available commands</span>`);
+    newLine(``);
+    inputRow.classList.add('visible');
+    cmdInput.focus();
+    return;
+  }
+  const [html, pause, typed] = sequence[i];
+  if (typed) {
+    const el = newLine();
+    const promptEnd = html.lastIndexOf('</span>') + '</span>'.length;
+    const promptHtml = html.slice(0, promptEnd);
+    const commandText = html.slice(promptEnd).trim();
+    el.innerHTML = promptHtml + ' ';
+    let ci = 0;
+    const cur = document.createElement('span');
+    cur.className = 'caret';
+    el.appendChild(cur);
+    function tick() {
+      if (ci < commandText.length) {
+        cur.insertAdjacentText('beforebegin', commandText[ci++]);
+        window.scrollTo(0, document.body.scrollHeight);
+        setTimeout(tick, 50 + Math.random() * 35);
+      } else {
+        cur.remove();
+        setTimeout(() => runSequence(i + 1), pause);
+      }
+    }
+    tick();
+  } else {
+    const el = newLine(html);
+    window.scrollTo(0, document.body.scrollHeight);
+    setTimeout(() => runSequence(i + 1), pause);
+  }
+}
+
+runSequence(0);
+
+// ── INTERACTIVE COMMANDS ─────────────────────
+const commands = {
+  help: () => [
+    `<span class="dim">available commands:</span>`,
+    `  whoami      who is this person`,
+    `  about       about me`,
+    `  skills      tech stack`,
+    `  projects    shipped work`,
+    `  contact     get in touch`,
+    `  status      availability`,
+    `  clear       clear terminal`,
+  ],
+  whoami: () => [
+    `Your Name`,
+    `Full-Stack Developer`,
+    `Based in Your City`,
+  ],
+  about: () => [
+    `I build things for the web.`,
+    `Clean code, thoughtful architecture, products`,
+    `that people actually enjoy using.`,
+  ],
+  skills: () => [
+    `<span class="dim">frontend </span>  React  Next.js  TypeScript  Tailwind`,
+    `<span class="dim">backend  </span>  Node.js  Python  FastAPI`,
+    `<span class="dim">database </span>  PostgreSQL  MongoDB  Redis`,
+    `<span class="dim">devops   </span>  AWS  Docker  CI/CD  Linux`,
+  ],
+  projects: () => [
+    `<span class="dim">01</span>  Project Alpha   — SaaS platform, 10k+ users`,
+    `<span class="dim">02</span>  Project Beta    — AI analytics dashboard`,
+    `<span class="dim">03</span>  Project Gamma   — Mobile app + REST API`,
+    `<span class="dim">04</span>  Project Delta   — Open source CLI ★500`,
+  ],
+  contact: () => [
+    `email     <a href="mailto:hello@yourname.dev">hello@yourname.dev</a>`,
+    `github    <a href="https://github.com/robertted" target="_blank">github.com/robertted</a>`,
+    `linkedin  <a href="https://linkedin.com/in/yourname" target="_blank">linkedin.com/in/yourname</a>`,
+    `twitter   <a href="https://twitter.com/yourhandle" target="_blank">@yourhandle</a>`,
+  ],
+  status: () => [
+    `<span class="green">● open to work — reach out anytime.</span>`,
+  ],
+  clear: () => null,
+};
+
+cmdInput.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const raw = cmdInput.value.trim().toLowerCase();
+  cmdInput.value = '';
+
+  // echo the typed command
+  newLine(`<span class="green">~</span> ${raw}`);
+
+  if (!raw) { window.scrollTo(0, document.body.scrollHeight); return; }
+
+  if (raw === 'clear') {
+    out.innerHTML = '';
+    window.scrollTo(0, 0);
+    return;
+  }
+
+  const fn = commands[raw];
+  if (fn) {
+    fn().forEach(l => newLine(l));
+  } else {
+    newLine(`<span class="dim">command not found: ${raw}. try 'help'</span>`);
+  }
+
+  newLine('');
+  window.scrollTo(0, document.body.scrollHeight);
+});
+</script>
+</body>
+</html>
