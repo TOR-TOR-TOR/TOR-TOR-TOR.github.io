@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>robertted.dev</title>
+<title>tor.dev</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -20,7 +20,6 @@ body {
   margin: 0 auto;
 }
 
-/* online indicator */
 #indicator {
   position: fixed;
   top: 1.4rem;
@@ -44,14 +43,12 @@ body {
 }
 
 .line { display: block; white-space: pre-wrap; word-break: break-word; }
-
 .green { color: #4af626; }
 .dim   { color: #555; }
 
 a { color: #e8e8e8; text-underline-offset: 3px; }
 a:hover { color: #4af626; }
 
-/* blinking caret */
 .caret {
   display: inline-block;
   width: 8px; height: 1em;
@@ -62,7 +59,6 @@ a:hover { color: #4af626; }
 }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
-/* interactive input row */
 #input-row {
   display: none;
   align-items: center;
@@ -99,9 +95,8 @@ const out = document.getElementById('out');
 const inputRow = document.getElementById('input-row');
 const cmdInput = document.getElementById('cmd-input');
 
-// ── AUTO SEQUENCE ─────────────────────────────
 const sequence = [
-  [`<span class="dim">  robertted.dev</span>`, 0],
+  [`<span class="dim">  tor.dev</span>`, 0],
   [`<span class="dim">  ────────────────────────────────────</span>`, 80],
   [``, 280],
 
@@ -124,17 +119,13 @@ const sequence = [
   [``, 280],
 
   [`<span class="green">~</span> ls projects/`, 500, true],
-  [`<span class="dim">01</span>  Project Alpha   — SaaS platform, 10k+ users`, 60],
-  [`<span class="dim">02</span>  Project Beta    — AI analytics dashboard`, 60],
-  [`<span class="dim">03</span>  Project Gamma   — Mobile app + REST API`, 60],
-  [`<span class="dim">04</span>  Project Delta   — Open source CLI ★500`, 60],
+  [`<span class="dim">01</span>  Maternal Health Reminder System`, 60],
+  [`<span class="dim">02</span>  Telegram Mpesa Payment Bot`, 60],
   [``, 280],
 
   [`<span class="green">~</span> cat contact.txt`, 500, true],
-  [`email     <a href="mailto:hello@yourname.dev">hello@yourname.dev</a>`, 60],
-  [`github    <a href="https://github.com/robertted" target="_blank">github.com/robertted</a>`, 60],
-  [`linkedin  <a href="https://linkedin.com/in/yourname" target="_blank">linkedin.com/in/yourname</a>`, 60],
-  [`twitter   <a href="https://twitter.com/yourhandle" target="_blank">@yourhandle</a>`, 60],
+  [`email     <a href="mailto:swazitech001@gmail.com">swazitech001@gmail.com</a>`, 60],
+  [`github    <a href="https://github.com/TOR-TOR-TOR" target="_blank">github.com/TOR-TOR-TOR</a>`, 60],
   [``, 280],
 
   [`<span class="green">~</span> echo $STATUS`, 500, true],
@@ -152,7 +143,6 @@ function newLine(html = '') {
 
 function runSequence(i) {
   if (i >= sequence.length) {
-    // hint line then activate input
     newLine(`<span class="dim">  type 'help' for available commands</span>`);
     newLine(``);
     inputRow.classList.add('visible');
@@ -190,7 +180,6 @@ function runSequence(i) {
 
 runSequence(0);
 
-// ── INTERACTIVE COMMANDS ─────────────────────
 const commands = {
   help: () => [
     `<span class="dim">available commands:</span>`,
@@ -203,7 +192,7 @@ const commands = {
     `  clear       clear terminal`,
   ],
   whoami: () => [
-    `I am Tor`,
+    `Tor`,
     `Data Scientist & Developer`,
   ],
   about: () => [
@@ -212,15 +201,14 @@ const commands = {
     `from ML pipelines to full-stack applications.`,
   ],
   skills: () => [
-   `<span class="dim">languages</span>  Python  R  SQL`, 
-   `<span class="dim">data     </span>  Data Analysis  Machine Learning`, 
-   `<span class="dim">frontend </span>  React  Next.js  TypeScript`, 
-   `<span class="dim">backend  </span>  Node.js  FastAPI`, 
-   `<span class="dim">devops   </span>  AWS  Docker  CI/CD`, 
+    `<span class="dim">languages</span>  Python  R  SQL  TypeScript`,
+    `<span class="dim">data     </span>  Data Analysis  Machine Learning  Visualization`,
+    `<span class="dim">web      </span>  React  Next.js  Node.js  FastAPI`,
+    `<span class="dim">tools    </span>  Git  Docker  Jupyter  VS Code`,
   ],
   projects: () => [
-    `<span class="dim">01</span>  Project Alpha   — Maternal Health Reminder System`,
-    `<span class="dim">02</span>  Project Beta    — Telegram Mpesa payment bot`,
+    `<span class="dim">01</span>  Maternal Health Reminder System`,
+    `<span class="dim">02</span>  Telegram Mpesa Payment Bot`,
   ],
   contact: () => [
     `email     <a href="mailto:swazitech001@gmail.com">swazitech001@gmail.com</a>`,
@@ -237,7 +225,6 @@ cmdInput.addEventListener('keydown', e => {
   const raw = cmdInput.value.trim().toLowerCase();
   cmdInput.value = '';
 
-  // echo the typed command
   newLine(`<span class="green">~</span> ${raw}`);
 
   if (!raw) { window.scrollTo(0, document.body.scrollHeight); return; }
